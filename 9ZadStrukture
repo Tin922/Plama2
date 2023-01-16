@@ -1,0 +1,324 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <time.h>
+
+typedef struct Node* Nodecurr;
+typedef struct red* redcurr;
+typedef struct Node{
+	int x;
+	struct Node* right;
+	struct Node* left;
+}Node;
+typedef struct red {
+	Nodecurr nodePointer;
+	redcurr next;
+}red;
+
+void treeDeallocation(Node* node);
+int RAND(int min, int max);
+int redDeallocation(red* root);
+void fileInOrder(Node* p, FILE* file);
+int writeIntoFile(Node* root);
+int sumaLevel(Node* rootTree);
+int levelOrderReplace(red* redRoot, Node* rootTree);
+int levelOrderPrint(red* redRoot, Node* rootTree);
+int insertEnd(red* redRoot, Node* rootTree);
+red* newRed(Node* rootTree);
+Node* newNodeF(int x1);
+int insertNode(Node** root, int x);
+int insertNode1(Node** root, int x);
+void printInOrder(Node* p);
+void printPreOrder(Node* p);
+Node* popStart(red* redRoot);
+int LevelOrder(red* redRoot, Node* rootTree, Node** rootNewTree);
+ 
+int main() {
+	srand(time(0));
+
+	Node* root = NULL;
+	Node* root1 = NULL;
+	red redRoot;
+	redRoot.next = NULL;
+
+	red redRootSum;
+	redRootSum.next = NULL;
+
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+	insertNode(&root, RAND(11, 89));
+
+	printf("Level first\n");
+	levelOrderPrint(&redRoot, root);
+
+	printf("\nFilling reverse tree...\n");
+	LevelOrder(&redRoot, root, &root1);
+	printf("\n level order..\n");
+
+	levelOrderPrint(&redRoot, root1);
+	printf("\nFilling suma tree...\n");
+
+	levelOrderReplace(&redRootSum, root1);
+	levelOrderPrint(&redRoot, root1);
+	
+	redDeallocation(&redRoot);
+	redDeallocation(&redRootSum);
+	writeIntoFile(root);
+	writeIntoFile(root1);
+
+	treeDeallocation(root);
+	printf("\n");
+	treeDeallocation(root1);
+
+	return 0;
+}
+
+int RAND(int min, int max) {
+	return((rand() % (max - min + 1)) + min);
+	}
+int insertEnd(redcurr redRoot, Nodecurr rootTree) {
+	redcurr curr = redRoot;
+	while (curr->next != NULL) 
+		curr = curr->next;
+	
+	curr->next = newRed(rootTree);
+	return 0;
+}
+red* newRed(Node* rootTree) {
+	red* newRed = malloc(sizeof(red));
+	if (newRed == NULL) {
+		printf("error");
+		return NULL;
+	}
+	newRed->next = NULL;
+	newRed->nodePointer = rootTree;
+
+	return newRed;
+}
+Node* newNodeF(int x1) {
+	Node* newNode = malloc(sizeof(Node));
+	if (newNode == NULL) {
+		printf("Error newNode is NULL\n");
+		return NULL;
+	}
+	newNode->x = x1;
+	newNode->left = NULL;
+	newNode->right = NULL;
+
+	return newNode;
+}
+int insertNode(Node** root, int x) {
+	if (*root == NULL) { // Unos ako je root null odnosno prazno stablo
+		*root = malloc(sizeof(Node));
+
+		if (*root == NULL) {
+			printf("Root not allocated properly\n");
+			return -1;
+		}
+		(*root)->x = x;
+		(*root)->left = NULL;
+		(*root)->right = NULL;
+		return 0;
+	}
+	Node* curr = *root;
+
+	while (curr->right != NULL || curr->left != NULL) {
+		if (x < curr->x && curr->left != NULL) {
+			curr = curr->left;
+		}
+		else if (x > curr->x && curr->right != NULL) {
+			curr = curr->right;
+		}
+		else if (x == curr->x && curr->right != NULL) {
+			curr = curr->right;
+		}
+		else break;
+	}
+
+	if (x < curr->x) {
+		curr->left = newNodeF(x);
+	}
+	else if (x > curr->x) {
+		curr->right = newNodeF(x);
+	}
+	return 0;
+}
+void printInOrder(Node* p) {
+	if (p == NULL) return;
+	printInOrder(p->left);
+	printf("%d ", p->x);
+	printInOrder(p->right);
+}
+void printPreOrder(Node* p) {
+	if (p == NULL) return;
+	printf("%d ", p->x);
+	printPreOrder(p->left);
+	printPreOrder(p->right);
+}
+Node* popStart(red* redRoot) {
+	
+	if (redRoot->next == NULL) {
+		return NULL;
+	}
+	else {
+		Node* curr = redRoot->next->nodePointer;
+		redRoot->next = redRoot->next->next;
+		return curr;
+	}
+}
+int LevelOrder(red* redRoot, Node* rootTree, Node** rootNewTree) {
+	Node* curr = rootTree;
+
+	while (curr != NULL) {
+		insertNode1(rootNewTree, curr->x);
+		if (curr->right != NULL) {
+			insertEnd(redRoot, curr->right);
+		}
+		if (curr->left != NULL) {
+			insertEnd(redRoot, curr->left);
+		}
+		curr = popStart(redRoot);
+	}
+	return 0;
+}
+int insertNode1(Node** root, int x) {
+	if (*root == NULL) { // Unos ako je root null odnosno prazno stablo
+		*root = malloc(sizeof(Node));
+
+		if (*root == NULL) {
+			printf("Root not allocated properly\n");
+			return -1;
+		}
+		(*root)->x = x;
+		(*root)->left = NULL;
+		(*root)->right = NULL;
+		return 0;
+	}
+	Node* curr = *root;
+
+	while (curr->right != NULL || curr->left != NULL) {
+		if (x > curr->x && curr->left != NULL) {
+			curr = curr->left;
+		}
+		else if (x < curr->x && curr->right != NULL) {
+			curr = curr->right;
+		}
+		else if (x == curr->x && curr->left != NULL) {
+			curr = curr->left;
+		}
+		else break;
+	}
+	if (x > curr->x) {
+		curr->left = newNodeF(x);
+	}
+	else if (x < curr->x) {
+		curr->right = newNodeF(x);
+	}
+
+	return 0;
+}
+int levelOrderPrint(red* redRoot, Node* rootTree) {
+	Node* curr = rootTree;
+
+	while (curr != NULL) {
+		printf("%d ", curr->x);
+		
+		if (curr->left != NULL) {
+			insertEnd(redRoot, curr->left);
+		}
+		if (curr->right != NULL) {
+			insertEnd(redRoot, curr->right);
+		}
+		curr = popStart(redRoot);
+	}
+	return 0;
+}
+int levelOrderReplace (red* redRoot, Node* rootTree) {
+	Node* curr = rootTree;
+
+	while (curr != NULL) {
+		curr->x = sumaLevel(curr);
+
+		if (curr->left != NULL) {
+			insertEnd(redRoot, curr->left);
+		}
+		if (curr->right != NULL) {
+			insertEnd(redRoot, curr->right);
+		}
+		curr = popStart(redRoot);
+	}
+	return 0;
+}
+int sumaLevel(Node* rootTree) {
+	int suma = 0;
+	red redRoot;
+	redRoot.next = NULL;
+	Node* curr = rootTree;
+
+	while (curr != NULL) {
+
+		if (curr->left != NULL)
+			insertEnd(&redRoot, curr->left);
+
+		if (curr->right != NULL)
+			insertEnd(&redRoot, curr->right);
+
+		curr = popStart(&redRoot);
+
+		if (curr == NULL)
+			break;
+		else
+			suma = suma + curr->x;
+	}
+	redDeallocation(&redRoot);
+	return suma;
+}
+int writeIntoFile(Node* p) {
+	FILE* file;
+	char string[100] = { 0 };
+	printf("\nEnter file name u want to open\n");
+	scanf("%s", string);
+	file = fopen(string, "w");
+	if (file == NULL) {
+		printf("File not opened");
+		return -1;
+	}
+	fileInOrder(p, file);
+	return 0;
+}
+void fileInOrder(Node* p, FILE* file) {
+	if (p == NULL) return;
+
+	fileInOrder(p->left, file);
+	fprintf(file, "%d ", p->x);
+	fileInOrder(p->right, file);
+}
+int redDeallocation(red* root) {
+	red* curr = root->next;
+	root = root->next;
+
+	while (curr != NULL) {
+		curr = root;
+		root = root->next;
+		free(root);
+	}
+	return 0;
+}
+void treeDeallocation(Node* node) {
+	if (node == NULL) return;
+
+	treeDeallocation(node->left);
+	treeDeallocation(node->right);
+
+	printf("\n Deleting node: %d", node->x);
+	free(node);
+}
