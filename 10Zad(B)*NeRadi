@@ -5,20 +5,28 @@
 #include <malloc.h>
 #include <time.h>
 
+//
+//typedef struct Grad* GradCurr;
+//
+//typedef struct Drzava* DrzavaCurr;
+
+
 typedef struct Grad {
 	struct Grad* next;
-	char* imeGrada[100];
+	char imeGrada[100];
 	int brojStanovnika;
 }Grad;
 
 
 typedef struct Drzava {
-	char* imeDrzave[100];
+	char imeDrzave[100];
 	struct Drzava* left;
 	struct Drzava* right;
 	struct Grad* gradPointer;
 }Drzava;
 
+void printDrzave(Drzava* root);
+int printfGrad(Grad* root);
 int cityCompare(Grad* grad1, Grad* grad2);
 Grad* newGradF(char* imeGrada, int brojst);
 int insertSortedGrad(Grad** rootGrad, char* buferGrad, int brojStanovnika);
@@ -33,9 +41,7 @@ int main() {
 
 	ReadDrzave(&rootDrz);
 
- printf("%s", rootDrz->imeDrzave);
-	printf("%s", rootDrz->left->imeDrzave);
-
+	printDrzave(rootDrz);
 }
 int ReadDrzave(Drzava** rootDrz) {
 	char bufferDrz[100] = { 0 };
@@ -44,19 +50,19 @@ int ReadDrzave(Drzava** rootDrz) {
 	FILE* file = fopen("drzave.txt", "r");
 	if (file == NULL) {
 		printf("File not opened");
+
 		return -1;
 	}
-
 	while (fscanf(file, "%s %s", bufferDrz, bufferFileDrz) >= 2) {
 		insertTree(rootDrz, bufferDrz, bufferFileDrz);
-
 	}
 	fclose(file);
+	return 0;
 }
 int insertTree(Drzava** rootDrz, char* bufferDrz, char* bufferFileDrz) {
 	if (*rootDrz == NULL) {
 		*rootDrz = newDrzavaF(bufferDrz);
-
+		(*rootDrz)->gradPointer = readGradovi(bufferFileDrz);
 		return 0;
 	}
 	Drzava* newDrzava = newDrzavaF(bufferDrz);
@@ -67,7 +73,7 @@ int insertTree(Drzava** rootDrz, char* bufferDrz, char* bufferFileDrz) {
 		if ((strcmp(bufferDrz, curr->imeDrzave) > 0) && (curr->right != NULL)) {
 			curr = curr->right;
 		}
-	else if ((strcmp(bufferDrz, curr->imeDrzave) < 0) && (curr->right != NULL)) {
+		else if ((strcmp(bufferDrz, curr->imeDrzave) < 0) && (curr->right != NULL)) {
 			curr = curr->left;
 		}
 		else break;
@@ -78,8 +84,8 @@ int insertTree(Drzava** rootDrz, char* bufferDrz, char* bufferFileDrz) {
 	else {
 		curr->left = newDrzava;
 	}
-
-	//newDrzava->gradPointer = readGradovi(bufferFileDrz);
+	newDrzava->gradPointer = readGradovi(bufferFileDrz);
+	return 0;
 }
 Drzava* newDrzavaF(char* imeDrzave) {
 	Drzava* newDrzava = malloc(sizeof(Drzava));
@@ -103,11 +109,11 @@ Grad* newGradF(char* imeGrada, int brojst) {
 
 	return newDrzava;
 }
-
-Grad* readGradovi(char* bufferDrzavaFile){
+Grad* readGradovi(char* bufferDrzavaFile) {
 	char buferGrad[100] = { 0 };
 	int brojStanovnika = 0;
-	Grad* rootGrad = NULL;
+	Grad rootGrad;
+	rootGrad.next = NULL;
 
 	FILE* file = fopen(bufferDrzavaFile, "r");
 	if (file == NULL) {
@@ -116,10 +122,9 @@ Grad* readGradovi(char* bufferDrzavaFile){
 	}
 
 	while (fscanf(file, "%s %d", buferGrad, &brojStanovnika) >= 2) {
-
 		insertSortedGrad(&rootGrad, buferGrad, brojStanovnika);
 	}
-	return rootGrad;
+	return (rootGrad));
 }
 int cityCompare(Grad* grad1, Grad* grad2) {
 	int result = 0;
@@ -129,23 +134,41 @@ int cityCompare(Grad* grad1, Grad* grad2) {
 	}
 	return result;
 }
-
-int insertSortedGrad(Grad** rootGrad,char* buferGrad, int brojStanovnika) {
-	if ((*rootGrad) == NULL) {
-		(*rootGrad) = newGradF(buferGrad, brojStanovnika);
+int insertSortedGrad(Grad* rootGrad, char* buferGrad, int brojStanovnika) {
+	if ((rootGrad)->next == NULL) {
+		(rootGrad)->next = newGradF(buferGrad, brojStanovnika);
 		return 0;
 	}
-	Grad* curr = *rootGrad;
+	Grad* curr = rootGrad;
 	Grad* gradInsert = newGradF(buferGrad, brojStanovnika);
 
 	while (curr->next != NULL) {
-		if(cityCompare(gradInsert, curr->next) < 0) {
+		if (cityCompare(gradInsert, curr->next) < 0) {
 			break;
 		}
 		curr = curr->next;
 	}
-	gradInsert->next = curr;
+	gradInsert->next = curr->next;
 	curr->next = gradInsert;
 
 	return 0;
+}
+
+int printfGrad(Grad* curr) {
+	//Grad* curr = root->next;
+	printf("\n");
+		while (curr != NULL) {
+			printf("%s = %d\n", curr->imeGrada, curr->brojStanovnika);
+			curr = curr->next;
+		}
+		return 0;
+}
+
+void printDrzave(Drzava* root) {
+	if (root == NULL) return;
+
+	printf("%s\n:", root->imeDrzave);
+	printfGrad(root->gradPointer);
+	printDrzave(root->right);
+	printDrzave(root->left);
 }
