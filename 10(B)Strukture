@@ -220,8 +220,8 @@ void deallocation(Drzava* root) {
 	printf("delete = %s\n", root->imeDrzave);
 	free(root);
 }
-void deallocateGradovi(Grad* root) {
-	root = root->next;
+void deallocateGradovi(Grad* curr) {
+	Grad* root = curr->next;
 	Grad* toRemove = root;
 	while (root != NULL) {
 		printf("delete = %s\n", root->imeGrada);
@@ -229,4 +229,5 @@ void deallocateGradovi(Grad* root) {
 		root = root->next;
 		free(toRemove);
 	}
+	free(curr);
 }
