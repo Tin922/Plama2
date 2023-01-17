@@ -5,9 +5,6 @@
 #include <malloc.h>
 #include <time.h>
 
-typedef struct Grad* GradCurr;
-typedef struct Drzava* DrzavaCurr;
-
 typedef struct Drzava {
 	char drzavaIme[100];
 	struct Drzava* next;
@@ -27,12 +24,14 @@ int insertTree(Grad** gradRoot, char* imeGrada, int brojStanovnikagrada);
 Grad* readGradovi(char* bufferFileDrzave);
 int insertSorted(Drzava** rootDrz, char* imeDrzav, char* bufferFileDrzave);
 int PrintDrzave(Drzava* root);
-int readDrzave(Drzava* rootDrz);
+int readDrzave(Drzava** rootDrz);
 Drzava* newDrzavaF(char* drzavaIme);
 Grad* newGradF(char* gradIme, int brojSt);
 int insertStart(Drzava* root, char* imeDrzave);
 int insertAfter(Drzava* root, char* insertAfterDrzava, char* imeDrzave, Drzava* newDrzava);
 void printGradove(Grad* grad);
+void deallocationGradovi(Grad* grad);
+void deallocationAll(Drzava* root);
 
 int main() {
 	char drzavaBuff[100] = { 0 };
@@ -40,7 +39,7 @@ int main() {
 	int upRange = 0;
 	Drzava* root = malloc((sizeof(Drzava)));
 	if (root == NULL) {
-		return;
+		return -1;
 	}
 	root->next = NULL;
 
@@ -54,7 +53,8 @@ int main() {
 	printf("\nUnesite iznad kojega broja stanovnika zelite pretraziti gradove = ");
 	scanf("%d", &upRange);
 	findCitiesAboveNumber(drzava1->TreeRoot, upRange);
-
+	printf("\n");
+	deallocationAll(root);
 	return 0;
 }
 
@@ -95,7 +95,7 @@ Grad* readGradovi(char* bufferFileDrzave) {
 
 	if (file == NULL){
 		printf("File grad not opened properly\n");
-		return -1;
+		return NULL;
 	}
 
 	while (fscanf(file, "%s %d", imeGrada, &brojStanovnikagrada) >= 2) {
@@ -150,7 +150,7 @@ Drzava* newDrzavaF(char* drzavaIme)
 	return newdrzava;
 }
 Grad* newGradF(char* gradIme, int brojSt) {
-	Grad* newGrad = malloc(sizeof(Drzava));
+	Grad* newGrad = malloc(sizeof(Grad));
 	if ( newGrad == NULL){
 		printf("NewDrzava not allocated properly\n");
 		return NULL;
@@ -180,7 +180,6 @@ int insertAfter(Drzava* root, char* insertAfterDrzava, char* imeDrzave, Drzava* 
 		}
 		curr = curr->next;
 	}
-	
 	newDrzava->next = curr->next;
 	curr->next = newDrzava;
 
@@ -236,4 +235,26 @@ int findCitiesAboveNumber(Grad* rootTree, int upRange) {
 		}
 	}
 	return 0;
+}
+
+void deallocationAll(Drzava* root) {
+	Drzava* curr = root;
+	root = root->next;
+	free(curr);
+	while (root != NULL){
+		curr = root;
+		root = root->next;
+		printf("%s = delete\n", curr->drzavaIme);
+		deallocationGradovi(curr->TreeRoot);
+		free(curr);
+}
+}
+void deallocationGradovi(Grad* grad) {
+	if (grad == NULL) return;	
+
+	deallocationGradovi(grad->left);
+	deallocationGradovi(grad->right);
+	printf("delete = %s\n", grad->gradIme);
+
+	free(grad);
 }
