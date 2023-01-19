@@ -18,14 +18,14 @@ typedef struct Drzava {
 	struct Grad* gradPointer;
 }Drzava;
 
-void deallocateGradovi(Grad* gradPointer);
-void deallocation(Drzava* rootDrz);
+int deallocateGradovi(Grad* gradPointer);
+int deallocation(Drzava* rootDrz);
 int findRange(Drzava* root, char* drzava, int broj);
 void printDrzave(Drzava* root);
 int printfGrad(Grad* root);
 int cityCompare(Grad* grad1, Grad* grad2);
 Grad* newGradF(char* imeGrada, int brojst);
-int insertSortedGrad(Grad** rootGrad, char* buferGrad, int brojStanovnika);
+int insertSortedGrad(Grad* rootGrad, char* buferGrad, int brojStanovnika);
 Grad* readGradovi(char* bufferDrzavaFile);
 int insertTree(Drzava** rootDrz, char* bufferDrz, char* bufferFileDrz);
 int ReadDrzave(Drzava** rootDrz);
@@ -34,7 +34,9 @@ Grad* findDrzava(Drzava* root, char* drzava);
 
 int main() {
 	Drzava* rootDrz = NULL;
-	char drzava[100] = { 0 }; int broj = 0;
+	char drzava[100] = { 0 };
+	int broj = 0;
+	
 	ReadDrzave(&rootDrz);
 	printDrzave(rootDrz);
 
@@ -47,7 +49,7 @@ int main() {
 
 	printf("Deallocation\n");
 	deallocation(rootDrz);
-	
+
 	return 0;
 }
 int ReadDrzave(Drzava** rootDrz) {
@@ -57,7 +59,6 @@ int ReadDrzave(Drzava** rootDrz) {
 	FILE* file = fopen("drzave.txt", "r");
 	if (file == NULL) {
 		printf("File not opened");
-
 		return -1;
 	}
 	while (fscanf(file, "%s %s", bufferDrz, bufferFileDrz) >= 2) {
@@ -67,16 +68,16 @@ int ReadDrzave(Drzava** rootDrz) {
 	return 0;
 }
 int insertTree(Drzava** rootDrz, char* bufferDrz, char* bufferFileDrz) {
+	Drzava* newDrzava = newDrzavaF(bufferDrz);
+	Drzava* curr = *rootDrz;
+
 	if (*rootDrz == NULL) {
-		*rootDrz = newDrzavaF(bufferDrz);
+		*rootDrz = newDrzava;
 		(*rootDrz)->gradPointer = readGradovi(bufferFileDrz);
 		return 0;
 	}
-	Drzava* newDrzava = newDrzavaF(bufferDrz);
-
-	Drzava* curr = *rootDrz;
+	
 	while (curr->left != NULL || curr->right != NULL) {
-
 		if ((strcmp(bufferDrz, curr->imeDrzave) > 0) && (curr->right != NULL)) {
 			curr = curr->right;
 		}
@@ -119,7 +120,11 @@ Grad* newGradF(char* imeGrada, int brojst) {
 Grad* readGradovi(char* bufferDrzavaFile) {
 	char buferGrad[100] = { 0 };
 	int brojStanovnika = 0;
-	Grad *rootGrad = malloc(sizeof(Grad));
+	Grad* rootGrad = malloc(sizeof(Grad));
+	if (rootGrad == NULL) {
+		printf("Error allocating memory\n");
+		return NULL;
+	}
 	rootGrad->next = NULL;
 
 	FILE* file = fopen(bufferDrzavaFile, "r");
@@ -127,10 +132,10 @@ Grad* readGradovi(char* bufferDrzavaFile) {
 		printf("File not opened");
 		return  NULL;
 	}
-
 	while (fscanf(file, "%s %d", buferGrad, &brojStanovnika) >= 2) {
 		insertSortedGrad(&rootGrad, buferGrad, brojStanovnika);
 	}
+	fclose(file);
 	return (rootGrad);
 }
 int cityCompare(Grad* grad1, Grad* grad2) {
@@ -161,16 +166,14 @@ int insertSortedGrad(Grad* rootGrad, char* buferGrad, int brojStanovnika) {
 	return 0;
 }
 int printfGrad(Grad* curr) {
-	if (curr->brojStanovnika > 0) {
-
-	}
-	else (curr = curr->next);
+	if (!(curr->brojStanovnika > 0))
+		(curr = curr->next);
 	printf("\n");
-		while (curr != NULL) {
-			printf("%s = %d\n", curr->imeGrada, curr->brojStanovnika);
-			curr = curr->next;
-		}
-		return 0;
+	while (curr != NULL) {
+		printf("%s = %d\n", curr->imeGrada, curr->brojStanovnika);
+		curr = curr->next;
+	}
+	return 0;
 }
 void printDrzave(Drzava* root) {
 	if (root == NULL) return;
@@ -190,14 +193,13 @@ int findRange(Drzava* root, char* drzava, int broj) {
 		curr = curr->next;
 	}
 	printfGrad(curr);
-	 
+
 	return 0;
 }
 Grad* findDrzava(Drzava* root, char* drzava) {
 	if (root == NULL) {
 		return NULL;
 	}
-
 	while (root != NULL) {
 		if (root->left != NULL && strcmp(drzava, root->imeDrzave) < 0) {
 			root = root->left;
@@ -209,7 +211,7 @@ Grad* findDrzava(Drzava* root, char* drzava) {
 	}
 	return (root->gradPointer);
 }
-void deallocation(Drzava* root) {
+int deallocation(Drzava* root) {
 	if (root == NULL) {
 		return;
 	}
@@ -219,8 +221,10 @@ void deallocation(Drzava* root) {
 
 	printf("delete = %s\n", root->imeDrzave);
 	free(root);
+
+	return 0;
 }
-void deallocateGradovi(Grad* curr) {
+int deallocateGradovi(Grad* curr) {
 	Grad* root = curr->next;
 	Grad* toRemove = root;
 	while (root != NULL) {
@@ -230,4 +234,5 @@ void deallocateGradovi(Grad* curr) {
 		free(toRemove);
 	}
 	free(curr);
+	return 0;
 }
