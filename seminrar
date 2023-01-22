@@ -1,0 +1,183 @@
+//---------------------------------------------------------------------------
+
+#include <fmx.h>
+#pragma hdrstop
+#include<queue>
+#include "Unit3.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.fmx"
+
+//---------------------------------------------------------------------------
+
+class Question{
+public:
+	char* Text;
+	char* Answer1;
+	char* Answer2;
+	char* Answer3;
+	int CorrectAnswer;
+
+	Question(){}
+	Question(char* text, char* ans1, char* ans2, char* ans3, int correctAns){
+		Text=text;
+		Answer1=ans1;
+		Answer2=ans2;
+		Answer3=ans3;
+		CorrectAnswer=correctAns;
+	}
+};
+
+int selectedAnswer;
+
+std::queue<Question>  questions;
+Question currentQuestion;
+
+int points = 0;
+int j = 0;
+
+
+std::queue<Question> LoadQuestions(int choice){
+	Question History[3];
+	Question Random[3];
+	Question Science[3];
+
+	Random[0]= Question("Which color does not appear on the Olympic rings?","Black","Orange","Green",2);
+	Random[1]= Question("What is the chemical formula for Table Salt?","NaCl","NaCl2","Na2Cl",1);
+	Random[2]= Question("What is the longest river in the world?", "Nile","Mississippi","Amazon",1);
+
+	History[0]= Question("Which nation did Hitler hate?","Jews","Monkies","Bears",1);
+	History[1]= Question("What is SSSR?","NaCl","NaCl2","Na2Cl",1);
+	History[2]= Question("What is D - Day", "Nile","Mississippi","Amazon",1);
+
+	Science[0]= Question("What color is black hole ?","Black","Orange","Green",2);
+	Science[1]= Question("What is the chemical formula for Table Salt?","NaCl","NaCl2","Na2Cl",1);
+	Science[2]= Question("Who is Einstein", "Dog","Human","Cat",1);
+
+	std::queue<Question> questions;
+
+	if(choice == 1){
+		for ( int i = 0 ; i < 3 ; i++){
+			questions.push(	Random[i]);
+	}
+	}
+	else if(choice == 2){
+			for ( int i = 0 ; i < 3 ; i++){
+			questions.push(	History[i]);
+	}
+	}
+	else if(choice == 3){
+		for ( int i = 0 ; i < 3 ; i++){
+			questions.push(	Science[i]);
+	}
+	}
+	else {
+	 QuestionLabel->Text = "You didnt choose any?";
+	}
+	return questions;
+}
+
+TForm3 *Form3;
+//---------------------------------------------------------------------------
+__fastcall TForm3::TForm3(TComponent* Owner)
+	: TForm(Owner)
+{   QuestionLabel->Text = "What kind of quiz do you want?";
+	Answer1RadioButton->Text= "Science";
+	Answer2RadioButton->Text= "History";
+	Answer3RadioButton->Text= "Food";
+
+	PointsLabel->Text = points;
+}
+void __fastcall TForm3::Answer1RadioButtonChange(TObject *Sender)
+{
+		selectedAnswer = 1;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm3::Answer2RadioButtonChange(TObject *Sender)
+{
+
+		selectedAnswer = 2;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm3::Answer3RadioButtonChange(TObject *Sender)
+{
+		selectedAnswer = 3;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm3::ConfirmButtonClick(TObject *Sender)
+{
+	 if(j == 0){
+			questions=LoadQuestions(selectedAnswer);
+			currentQuestion=questions.front();
+			j++;
+		  }
+
+	 else{
+
+	if( selectedAnswer == currentQuestion.CorrectAnswer){
+	points++;
+	PointsLabel->Text = points;
+	}
+	if( !questions.empty()){
+	 currentQuestion = questions.front();
+
+	QuestionLabel->Text= currentQuestion.Text;
+	Answer1RadioButton->Text= currentQuestion.Answer1;
+	Answer2RadioButton->Text= currentQuestion.Answer2;
+	Answer3RadioButton->Text= currentQuestion.Answer3;
+
+	questions.pop();
+	Answer1RadioButton->IsChecked = false;
+	Answer2RadioButton->IsChecked = false;
+	Answer3RadioButton->IsChecked = false;
+	}
+
+	else{
+		ConfirmButton->Enabled = false;
+		ConfirmButton->Text = "THE END";
+		QuestionLabel->Text = "WELL PLAYED";
+	}
+	 }
+}
+//---------------------------------------------------------------------------
+dasda
+
+
+
+//---------------------------------------------------------------------------
+
+#ifndef Unit3H
+#define Unit3H
+//---------------------------------------------------------------------------
+#include <System.Classes.hpp>
+#include <FMX.Controls.hpp>
+#include <FMX.Forms.hpp>
+#include <FMX.Controls.Presentation.hpp>
+#include <FMX.StdCtrls.hpp>
+#include <FMX.Types.hpp>
+//---------------------------------------------------------------------------
+class TForm3 : public TForm
+{
+__published:	// IDE-managed Components
+	TButton *ConfirmButton;
+	TLabel *QuestionLabel;
+	TRadioButton *Answer1RadioButton;
+	TRadioButton *Answer2RadioButton;
+	TRadioButton *Answer3RadioButton;
+	TLabel *Label2;
+	TLabel *PointsLabel;
+	void __fastcall Answer1RadioButtonChange(TObject *Sender);
+	void __fastcall Answer2RadioButtonChange(TObject *Sender);
+	void __fastcall Answer3RadioButtonChange(TObject *Sender);
+	void __fastcall ConfirmButtonClick(TObject *Sender);
+private:	// User declarations
+public:		// User declarations
+	__fastcall TForm3(TComponent* Owner);
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TForm3 *Form3;
+//---------------------------------------------------------------------------
+#endif
